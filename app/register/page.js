@@ -267,7 +267,7 @@ export default function RegisterPage() {
               <Button
                 variant="google"
                 onClick={handleGoogleSignUp}
-                className="w-full"
+                className="w-full cursor-pointer"
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path
@@ -293,9 +293,9 @@ export default function RegisterPage() {
               <Button
                 variant="github"
                 onClick={handleGitHubSignUp}
-                className="w-full"
+                className="w-full cursor-pointer"
               >
-                <Github className="w-5 h-5 mr-2" />
+                <Github className="w-5 h-5 mr-2 " />
                 GitHub
               </Button>
             </div>

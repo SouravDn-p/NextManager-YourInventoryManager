@@ -289,7 +289,7 @@ export default function DashboardPage() {
                 Dashboard
               </h1>
               <p className="mt-2 text-gray-400">
-                Welcome back! Here's your inventory overview.
+                Welcome back! Here&aposs your inventory overview.
               </p>
             </div>
             <div className="flex items-center space-x-4 mt-4 sm:mt-0">

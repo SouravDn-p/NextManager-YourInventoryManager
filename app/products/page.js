@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -18,7 +18,9 @@ import {
   Zap,
   ShoppingBag,
 } from "lucide-react";
-import getAllProducts from "@/lib/getAllProducts";
+import Image from "next/image";
+import Loading from "./loading";
+import Swal from "sweetalert2";
 
 // Enhanced Inline Components with Dark Theme
 const Button = ({
@@ -127,8 +129,64 @@ export default function ProductsPage() {
   const [sortOrder, setSortOrder] = useState("asc");
   const [viewMode, setViewMode] = useState("grid");
   const [selectedProducts, setSelectedProducts] = useState([]);
-  const products = getAllProducts();
-  const categories = ["all", ...new Set(products.map((p) => p.category))];
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null);
+  // const products = getAllProducts();
+  const [products, setProducts] = useState([
+    {
+      id: 1,
+      name: "Wireless Headphones",
+      category: "Electronics",
+      price: 99.99,
+      stock: 45,
+      status: "In Stock",
+      sku: "WH-001",
+      supplier: "AudioTech",
+      dateAdded: "2024-01-15",
+      image:
+        "https://www.startech.com.bd/image/cache/catalog/headphone/hoco/w46-charm/w46-charm-01-500x500.webp",
+      rating: 4.8,
+      sales: 234,
+      trending: true,
+    },
+    {
+      id: 2,
+      name: "Smart Watch",
+      category: "Electronics",
+      price: 199.99,
+      stock: 12,
+      status: "Low Stock",
+      sku: "SW-002",
+      supplier: "TechCorp",
+      dateAdded: "2024-01-10",
+      image:
+        "https://www.startech.com.bd/image/cache/catalog/smart-watch/colmi/p28-plus/p28-plus-black-official-500x500.webp",
+      rating: 4.6,
+      sales: 156,
+      trending: false,
+    },
+  ]);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch("/api/products");
+        if (!res.ok) {
+          throw new Error("Failed to fetch products");
+        }
+        const data = await res.json();
+        setProducts(data.data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+  if (loading) return <Loading />;
+  if (error) return <p className="text-center text-red-500">{error}</p>;
+  const categories = ["all", ...new Set(products?.map((p) => p.category))];
   const filteredProducts = products
     .filter((product) => {
       const matchesSearch =
@@ -180,7 +238,7 @@ export default function ProductsPage() {
     if (selectedProducts.length === filteredProducts.length) {
       setSelectedProducts([]);
     } else {
-      setSelectedProducts(filteredProducts.map((p) => p.id));
+      setSelectedProducts(filteredProducts?.map((p) => p.id));
     }
   };
 
@@ -195,6 +253,84 @@ export default function ProductsPage() {
         }`}
       />
     ));
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) {
+      return Swal.fire(
+        "No items selected",
+        "Please select at least one product.",
+        "info"
+      );
+    }
+
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: `You are about to delete ${selectedIds.length} products!`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Yes, delete!",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        const res = await fetch("/api/products/bulk-delete", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ids: selectedIds }),
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+          Swal.fire(
+            "Deleted!",
+            result.message || "Products deleted.",
+            "success"
+          );
+          // Refresh UI
+          setSelectedIds([]);
+        } else {
+          Swal.fire("Error", result.message || "Something went wrong", "error");
+        }
+      } catch (err) {
+        Swal.fire("Error", err.message || "Failed to delete", "error");
+      }
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "You are about to delete this product!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (confirm.isConfirmed) {
+      console.log("deleted id: ", id);
+      try {
+        const res = await fetch(`http://localhost:3000/api/products/${id}`, {
+          method: "DELETE",
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+          Swal.fire("Deleted!", result.message, "success");
+          // Optionally: Refresh the page or remove item from state
+        } else {
+          Swal.fire("Error", result.message, "error");
+        }
+      } catch (err) {
+        Swal.fire("Error", err.message, "error");
+      }
+    }
   };
 
   return (
@@ -213,18 +349,20 @@ export default function ProductsPage() {
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 sm:mt-0">
-              <Button variant="outline">
+              <Button variant="outline" className="cursor-pointer">
                 <Upload className="mr-2 h-4 w-4" />
                 Import
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" className="cursor-pointer">
                 <Download className="mr-2 h-4 w-4" />
                 Export
               </Button>
-              <Button variant="success">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Product
-              </Button>
+              <Link href={"http://localhost:3000/products/add"}>
+                <Button variant="success" className="cursor-pointer">
+                  <Plus className="mr-2 h-4 w-4 " />
+                  Add Product
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -247,7 +385,7 @@ export default function ProductsPage() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="bg-gray-800/50 border border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 backdrop-blur-sm min-w-[150px]"
+                  className="bg-gray-800/50 border cursor-pointer border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 backdrop-blur-sm min-w-[150px]"
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
@@ -264,7 +402,7 @@ export default function ProductsPage() {
                     setSortBy(field);
                     setSortOrder(order);
                   }}
-                  className="bg-gray-800/50 border border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 backdrop-blur-sm min-w-[150px]"
+                  className="bg-gray-800/50 border cursor-pointer border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 backdrop-blur-sm min-w-[150px]"
                 >
                   <option value="name-asc">Name A-Z</option>
                   <option value="name-desc">Name Z-A</option>
@@ -275,10 +413,10 @@ export default function ProductsPage() {
                 </select>
 
                 {/* View Mode */}
-                <div className="flex border border-gray-600 rounded-xl overflow-hidden">
+                <div className="flex border border-gray-600 rounded-xl overflow-hidden cursor-pointer">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`p-3 transition-all duration-300 ${
+                    className={`p-3 transition-all duration-300 cursor-pointer ${
                       viewMode === "grid"
                         ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
                         : "bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50"
@@ -288,7 +426,7 @@ export default function ProductsPage() {
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`p-3 transition-all duration-300 ${
+                    className={`p-3 transition-all duration-300 cursor-pointer ${
                       viewMode === "list"
                         ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
                         : "bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50"
@@ -305,7 +443,7 @@ export default function ProductsPage() {
           {selectedProducts.length > 0 && (
             <Card variant="glass" className="mb-6">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between cursor-pointer">
                   <span className="text-sm text-gray-300 flex items-center">
                     <Zap className="mr-2 h-4 w-4 text-yellow-400" />
                     {selectedProducts.length} products selected
@@ -315,7 +453,11 @@ export default function ProductsPage() {
                       <Edit className="mr-2 h-4 w-4" />
                       Bulk Edit
                     </Button>
-                    <Button variant="destructive" size="sm">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleBulkDelete()}
+                    >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete Selected
                     </Button>
@@ -328,9 +470,9 @@ export default function ProductsPage() {
           {/* Products Grid */}
           {viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {filteredProducts.map((product) => (
+              {filteredProducts?.map((product) => (
                 <Card
-                  key={product.id}
+                  key={product._id}
                   variant="product"
                   className="overflow-hidden"
                 >
@@ -357,9 +499,15 @@ export default function ProductsPage() {
 
                     {/* Product Image */}
                     <div className="aspect-square relative mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-gray-800 to-gray-700">
-                      <img
-                        src={product.image || "/placeholder.svg"}
+                      <Image
+                        src={
+                          product?.image ||
+                          product?.images[0]?.url ||
+                          "/placeholder.svg"
+                        }
                         alt={product.name}
+                        width={128} // Specify a width (in pixels)
+                        height={128} // Specify a height (in pixels)
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -426,23 +574,37 @@ export default function ProductsPage() {
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-4 mt-4 border-t border-gray-700/50">
                         <Link
-                          href={`/products/${product.id}`}
+                          href={`/products/${product._id}`}
                           className="flex-1"
                         >
                           <Button
                             variant="outline"
                             size="sm"
-                            className="w-full"
+                            className="w-full cursor-pointer"
                           >
                             <Eye className="mr-2 h-4 w-4" />
                             View
                           </Button>
                         </Link>
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="h-4 w-4" />
+                        <Link
+                          href={`/products/edit/${product._id}`}
+                          className="flex-1"
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="cursor-pointer"
+                          >
+                            <Edit className="h-4 w-4 cursor-pointer" />
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="cursor-pointer"
+                          onClick={() => handleDelete(product._id)}
+                        >
+                          <Trash2 className="h-4 w-4 " />
                         </Button>
                       </div>
                     </div>
@@ -493,7 +655,7 @@ export default function ProductsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-700/50">
-                      {filteredProducts.map((product) => (
+                      {filteredProducts?.map((product) => (
                         <tr
                           key={product.id}
                           className="hover:bg-gray-800/30 transition-colors duration-200"
@@ -509,9 +671,11 @@ export default function ProductsPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="relative">
-                                <img
+                                <Image
                                   src={product.image || "/placeholder.svg"}
                                   alt={product.name}
+                                  width={128} // Specify a width (in pixels)
+                                  height={128} // Specify a height (in pixels)
                                   className="w-12 h-12 object-cover rounded-xl mr-4"
                                 />
                                 {product.trending && (
@@ -554,7 +718,7 @@ export default function ProductsPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex items-center space-x-2">
-                              <Link href={`/products/${product.id}`}>
+                              <Link href={`/products/${product._id}`}>
                                 <Button variant="outline" size="sm">
                                   <Eye className="h-4 w-4" />
                                 </Button>

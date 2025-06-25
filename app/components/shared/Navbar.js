@@ -14,17 +14,14 @@ import {
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import Loading from "@/app/products/loading";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { data: session, status } = useSession();
   if (status === "loading") {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-gray-600 text-lg">Loading...</p>
-      </div>
-    );
+    return <Loading />;
   }
 
   const toggleMenu = () => {
@@ -84,13 +81,13 @@ export default function Navbar() {
             {session?.user?.email || (
               <>
                 <Link href="/login">
-                  <button className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-300">
+                  <button className="flex items-center cursor-pointer space-x-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-300">
                     <LogIn className="h-4 w-4" />
                     <span>Login</span>
                   </button>
                 </Link>
                 <Link href="/register">
-                  <button className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                  <button className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
                     <UserPlus className="h-4 w-4" />
                     <span>Register</span>
                   </button>

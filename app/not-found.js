@@ -42,9 +42,9 @@ const NotFoundPage = () => {
               Oops! Page Not Found
             </h2>
             <p className="text-xl text-gray-300 leading-relaxed max-w-lg mx-auto">
-              The page you're looking for seems to have vanished into the
-              digital void. Don't worry, even the best explorers sometimes take
-              a wrong turn.
+              The page you&aposre looking for seems to have vanished into the
+              digital void. Don&apost worry, even the best explorers sometimes
+              take a wrong turn.
             </p>
           </div>
 

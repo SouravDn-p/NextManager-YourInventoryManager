@@ -201,7 +201,7 @@ export default function LoginPage() {
             Sign in to your InventoryPro account
           </p>
           <p className="mt-2 text-sm text-gray-500">
-            Don't have an account?{" "}
+            Don&apost have an account?{" "}
             <Link
               href="/register"
               className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
@@ -233,7 +233,7 @@ export default function LoginPage() {
                     callbackUrl: "http://localhost:3000",
                   })
                 }
-                className="w-full"
+                className="w-full cursor-pointer"
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path
@@ -259,7 +259,7 @@ export default function LoginPage() {
               <Button
                 variant="github"
                 onClick={handleGitHubSignIn}
-                className="w-full"
+                className="w-full cursor-pointer"
               >
                 <Github className="w-5 h-5 mr-2" />
                 GitHub

@@ -2,16 +2,13 @@
 
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import Loading from "../products/loading";
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-gray-600 text-lg">Loading...</p>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (!session) {
