@@ -159,7 +159,7 @@ export default function LoginPage() {
             <p className="text-gray-600">{session?.user?.email}</p>
 
             <div className="mt-6">
-              <Link href={"http://localhost:3000"}>
+              <Link href={"https://next-manager-delta.vercel.app"}>
                 <button className="bg-blue-500 cursor-pointer hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-xl shadow transition duration-300">
                   Go to Home Page
                 </button>
@@ -247,7 +247,7 @@ export default function LoginPage() {
                 variant="google"
                 onClick={() =>
                   signIn("google", {
-                    callbackUrl: "http://localhost:3000",
+                    callbackUrl: "https://next-manager-delta.vercel.app",
                   })
                 }
                 className="w-full cursor-pointer"
