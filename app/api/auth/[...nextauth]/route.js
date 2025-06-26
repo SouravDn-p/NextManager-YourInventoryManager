@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
-import client from "@/lib/mongoClient"; // MongoDB connection file
+import client from "@/lib/mongoClient";
 
 export const authOptions = {
   providers: [
@@ -27,7 +27,6 @@ export const authOptions = {
     async jwt({ token, user }) {
       // First time login only
       if (user?.email) {
-        // const client = await clientPromise;
         const db = client.db("NextInvManager");
         const existingUser = await db
           .collection("Users")

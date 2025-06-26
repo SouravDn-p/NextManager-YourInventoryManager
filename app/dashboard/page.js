@@ -134,9 +134,11 @@ const Badge = ({ children, className = "", variant = "default" }) => {
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const [timeRange, setTimeRange] = useState("7d");
+  console.log("status", status);
 
   // Loading state
   if (status === "loading") {
+    console.log(status)
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -163,7 +165,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <Link href="/login">
-            <Button variant="default" className="w-full">
+            <Button variant="default" className="w-full cursor-pointer">
               Sign In
             </Button>
           </Link>

@@ -10,6 +10,7 @@ import {
   UserPlus,
   Menu,
   X,
+  User,
 } from "lucide-react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
@@ -37,6 +38,7 @@ export default function Navbar() {
     { href: "/", label: "Home", icon: Home },
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { href: "/products", label: "Products", icon: ShoppingCart },
+    { href: "/profile", label: "Profile", icon: User },
   ];
 
   return (

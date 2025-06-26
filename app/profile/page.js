@@ -27,6 +27,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 // Enhanced Inline Components with Dark Theme
 const Button = ({
@@ -170,7 +171,6 @@ export default function ProfilePage() {
   const { data: session, status } = useSession();
   console.log("session", session);
 
-
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
@@ -195,9 +195,11 @@ export default function ProfilePage() {
               You must be logged in to view this page.
             </p>
           </div>
-          <Button variant="default" className="w-full">
-            Sign In
-          </Button>
+          <Link href="/login">
+            <Button variant="default" className="w-full cursor-pointer">
+              Sign In
+            </Button>
+          </Link>
         </Card>
       </div>
     );
