@@ -6,6 +6,7 @@ import { Package, Eye, EyeOff, Mail, Lock, Github } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import Head from "next/head";
+import Image from "next/image";
 
 // Enhanced Inline Components with Dark Theme
 const Button = ({
@@ -143,11 +144,29 @@ export default function LoginPage() {
   if (session) {
     return (
       <>
-        <Head>
-          <title>Next Login</title>
-        </Head>
-        Signed in as {session.user.email} <br />
-        <button onClick={() => signOut()}>Sign out</button>
+        <div className="min-h-screen flex items-center justify-center bg-black p-4">
+          <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+            <Image
+              src={session?.user?.image || "/default-avatar.png"}
+              alt="Profile"
+              width={96}
+              height={96}
+              className="mx-auto rounded-full shadow mb-4"
+            />
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">
+              Welcome, {session?.user?.name}!
+            </h1>
+            <p className="text-gray-600">{session?.user?.email}</p>
+
+            <div className="mt-6">
+              <Link href={"http://localhost:3000"}>
+                <button className="bg-blue-500 cursor-pointer hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-xl shadow transition duration-300">
+                  Go to Home Page
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
       </>
     );
   }
@@ -167,11 +186,6 @@ export default function LoginPage() {
     // }
   };
 
-  const handleGoogleSignIn = () => {
-    console.log("Google Sign In");
-    // Implement Google sign in logic
-  };
-
   const handleGitHubSignIn = () => {
     console.log("GitHub Sign In");
     // Implement GitHub sign in logic
@@ -180,6 +194,9 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       {/* Background Effects */}
+      <Head>
+        <title>Next Login</title>
+      </Head>
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>

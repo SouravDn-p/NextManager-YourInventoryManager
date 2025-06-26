@@ -1,5 +1,10 @@
+"use client";
+
+import { useGetProductByIdQuery } from "@/redux/api/productapi";
 import Image from "next/image";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import Loading from "../loading";
 
 const categories = [
   { id: "phones", name: "Smartphones", icon: "📱" },
@@ -18,10 +23,15 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-export default async function ProductDetails({ params }) {
-  const { id } = params;
-  const res = await fetch(`http://localhost:3000/api/products/${id}`);
-  const product = await res.json().then((data) => data.data);
+export default function ProductDetails() {
+  const { id } = useParams();
+  const { data, isLoading, error } = useGetProductByIdQuery(id);
+
+  const product = data?.data;
+
+  if (isLoading) return <Loading />;
+  if (error || !product)
+    return <div className="p-4 text-red-500">❌ Failed to load product</div>;
 
   if (!product) {
     return (
@@ -31,7 +41,7 @@ export default async function ProductDetails({ params }) {
             Product Not Found
           </h1>
           <p className="text-gray-300 mb-8">
-            The product you're looking for doesn't exist.
+            The product you&apos;re looking for doesn&apos;t exist.
           </p>
           <Link
             href="/products"
@@ -119,11 +129,11 @@ export default async function ProductDetails({ params }) {
           <div className="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden">
             <Image
               src={
-                product.image ||
+                product?.image ||
                 product?.images[0]?.url ||
                 "/placeholder.svg?height=600&width=600"
               }
-              alt={product.name}
+              alt={product?.name}
               fill
               className="object-cover "
             />

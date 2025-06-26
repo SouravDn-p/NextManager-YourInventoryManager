@@ -1,8 +1,10 @@
+// app/layout.jsx
 import { Inter } from "next/font/google";
 import "./globals.css";
 import SessionWrapper from "./components/SessionWrapper";
 import Navbar from "./components/shared/Navbar";
 import Footer from "./components/shared/Footer";
+import ClientProvider from "./components/ClientProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,15 +16,17 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <SessionWrapper>
-        <body className={inter.className}>
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </body>
-      </SessionWrapper>
+      <body className={inter.className}>
+        <SessionWrapper>
+          <ClientProvider>
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </ClientProvider>
+        </SessionWrapper>
+      </body>
     </html>
   );
 }

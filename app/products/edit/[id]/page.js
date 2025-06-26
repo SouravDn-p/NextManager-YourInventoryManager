@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -15,16 +15,17 @@ import {
   DollarSign,
   Hash,
   User,
-  Calendar,
   Edit,
-  Plus,
   AlertCircle,
 } from "lucide-react";
-import getAllProducts from "@/lib/getAllProducts";
 import { useParams } from "next/navigation";
 import Image from "next/image";
+import {
+  useGetProductByIdQuery,
+  useUpdateProductMutation,
+} from "@/redux/api/productapi";
 
-// Validation Schema (same as add page)
+// Validation Schema
 const productSchema = z.object({
   name: z
     .string()
@@ -50,17 +51,9 @@ const productSchema = z.object({
     .min(3, "SKU must be at least 3 characters"),
   supplier: z.string().optional(),
   status: z.enum(["In Stock", "Low Stock", "Out of Stock"]),
-  specifications: z
-    .array(
-      z.object({
-        key: z.string().min(1, "Specification name is required"),
-        value: z.string().min(1, "Specification value is required"),
-      })
-    )
-    .optional(),
 });
 
-// Enhanced Inline Components (same as add page)
+// Enhanced Inline Components
 const Button = ({
   children,
   className = "",
@@ -72,7 +65,6 @@ const Button = ({
 }) => {
   const baseClasses =
     "inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-300 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 transform hover:scale-105";
-
   const variants = {
     default:
       "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl",
@@ -84,19 +76,16 @@ const Button = ({
       "bg-gradient-to-r from-red-600 to-pink-600 text-white hover:from-red-700 hover:to-pink-700 shadow-lg hover:shadow-xl",
     ghost: "hover:bg-gray-800/50 text-gray-300 hover:text-white",
   };
-
   const sizes = {
     default: "h-11 px-6 py-2",
     sm: "h-9 rounded-lg px-4",
     lg: "h-12 rounded-xl px-8",
   };
-
   const classes = `${baseClasses} ${variants[variant]} ${
     sizes[size]
   } ${className} ${
     disabled ? "opacity-50 cursor-not-allowed transform-none" : ""
   }`;
-
   return (
     <button type={type} className={classes} disabled={disabled} {...props}>
       {children}
@@ -113,7 +102,6 @@ const Card = ({ children, className = "", variant = "default", ...props }) => {
     glass:
       "rounded-2xl bg-gray-900/30 border border-gray-700/30 text-gray-100 shadow-xl backdrop-blur-xl",
   };
-
   return (
     <div className={`${variants[variant]} ${className}`} {...props}>
       {children}
@@ -201,7 +189,6 @@ const Badge = ({ children, className = "", variant = "default" }) => {
     destructive: "bg-red-500/20 text-red-300 border border-red-500/30",
     success: "bg-green-500/20 text-green-300 border border-green-500/30",
   };
-
   return (
     <span
       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold backdrop-blur-sm ${variants[variant]} ${className}`}
@@ -227,29 +214,24 @@ const FormField = ({ label, required, error, children }) => (
 );
 
 export default function EditProductPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { id } = useParams();
-  const products = getAllProducts();
-  const [isLoadingData, setIsLoadingData] = useState(true);
   const [images, setImages] = useState([]);
   const [originalData, setOriginalData] = useState(null);
+  const { id } = useParams();
+
+  const { data, error, isLoading } = useGetProductByIdQuery(id);
+  const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+
+  const product = data?.data;
 
   const {
     register,
     handleSubmit,
     control,
     formState: { errors, isValid, isDirty },
-    watch,
-    setValue,
     reset,
   } = useForm({
     resolver: zodResolver(productSchema),
     mode: "onChange",
-  });
-
-  const { fields, append, remove, replace } = useFieldArray({
-    control,
-    name: "specifications",
   });
 
   const categories = [
@@ -264,101 +246,49 @@ export default function EditProductPage() {
     "Health & Beauty",
     "Toys & Games",
   ];
+
+  // Populate form with product data
   useEffect(() => {
-    const loadProduct = async () => {
-      setIsLoadingData(true);
+    if (product) {
+      const mockProduct = {
+        ...product,
+        price: product.price.toString(),
+        stock: product.stock.toString(),
+        description: product.description || "",
+        images: product.images || [],
+      };
 
-      try {
-        // MongoDB ObjectId is usually string, no need for parseInt
-        const res = await fetch(`http://localhost:3000/api/products/${id}`);
-        const data = await res.json();
+      setOriginalData(mockProduct);
+      setImages(mockProduct.images);
 
-        if (!res.ok) {
-          throw new Error(data.message || "Product not found");
-        }
-
-        const foundProduct = data.data;
-
-        const mockProduct = {
-          ...foundProduct,
-          price: foundProduct.price.toString(),
-          stock: foundProduct.stock.toString(),
-          description: foundProduct.description || "",
-          specifications: foundProduct.specifications || {},
-          images: foundProduct.images || [],
-        };
-
-        setOriginalData(mockProduct);
-        setImages(mockProduct.images);
-
-        const specsArray = Object.entries(mockProduct.specifications).map(
-          ([key, value]) => ({ key, value })
-        );
-
-        reset({
-          name: mockProduct.name,
-          description: mockProduct.description,
-          category: mockProduct.category,
-          price: mockProduct.price,
-          stock: mockProduct.stock,
-          sku: mockProduct.sku,
-          supplier: mockProduct.supplier,
-          status: mockProduct.status,
-          specifications:
-            specsArray.length > 0 ? specsArray : [{ key: "", value: "" }],
-        });
-      } catch (error) {
-        console.error("Error loading product:", error);
-        alert("Error loading product data. Product not found or server error.");
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-
-    if (id) {
-      loadProduct();
+      reset({
+        name: mockProduct.name,
+        description: mockProduct.description,
+        category: mockProduct.category,
+        price: mockProduct.price,
+        stock: mockProduct.stock,
+        sku: mockProduct.sku,
+        supplier: mockProduct.supplier,
+        status: mockProduct.status,
+      });
     }
-  }, [id, reset]);
+  }, [product, reset]);
 
   const onSubmit = async (data) => {
-    setIsLoading(true);
-
     try {
-      // Filter out empty specifications
-      const filteredSpecs =
-        data.specifications?.filter((spec) => spec.key && spec.value) || [];
-
       const productData = {
         ...data,
         price: Number(data.price),
         stock: Number(data.stock),
-        specifications: filteredSpecs,
         images: images,
       };
 
-      // 🧠 Update API call to /api/products/[id]
-      const res = await fetch(`http://localhost:3000/api/products/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(productData),
-      });
-
-      const result = await res.json();
-
-      if (res.ok) {
-        setOriginalData(productData);
-        alert("✅ Product updated successfully!");
-        // Optionally redirect: router.push("/products");
-      } else {
-        alert(`❌ Failed to update: ${result.message}`);
-      }
+      await updateProduct({ id, ...productData }).unwrap();
+      setOriginalData(productData);
+      alert("✅ Product updated successfully!");
     } catch (error) {
       console.error("Error updating product:", error);
-      alert("❌ Error updating product. Please try again.");
-    } finally {
-      setIsLoading(false);
+      alert(`❌ Failed to update: ${error.data?.message || "Unknown error"}`);
     }
   };
 
@@ -372,7 +302,6 @@ export default function EditProductPage() {
 
     files.forEach((file) => {
       if (file.size > 10 * 1024 * 1024) {
-        // 10MB limit
         alert(`File ${file.name} is too large. Maximum size is 10MB.`);
         return;
       }
@@ -397,19 +326,8 @@ export default function EditProductPage() {
     setImages((prev) => prev.filter((img) => img.id !== id));
   };
 
-  const addSpecification = () => {
-    append({ key: "", value: "" });
-  };
-
   const resetToOriginal = () => {
     if (originalData) {
-      const specsArray = Object.entries(originalData.specifications || {}).map(
-        ([key, value]) => ({
-          key,
-          value,
-        })
-      );
-
       reset({
         name: originalData.name,
         description: originalData.description,
@@ -419,10 +337,7 @@ export default function EditProductPage() {
         sku: originalData.sku,
         supplier: originalData.supplier,
         status: originalData.status,
-        specifications:
-          specsArray.length > 0 ? specsArray : [{ key: "", value: "" }],
       });
-
       setImages(originalData.images || []);
     }
   };
@@ -440,12 +355,28 @@ export default function EditProductPage() {
     }
   };
 
-  if (isLoadingData) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
           <p className="text-gray-400">Loading product data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 text-lg">❌ Failed to load product</p>
+          <Link
+            href="/products"
+            className="mt-4 inline-block bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-6 py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-yellow-600 transition-all duration-300"
+          >
+            Back to Products
+          </Link>
         </div>
       </div>
     );
@@ -635,7 +566,6 @@ export default function EditProductPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {/* Current Images */}
                   {images.length > 0 && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                       {images.map((image) => (
@@ -643,8 +573,8 @@ export default function EditProductPage() {
                           <Image
                             src={image.url || "/placeholder.svg"}
                             alt="Product preview"
-                            width={128} // Specify a width (in pixels)
-                            height={128} // Specify a height (in pixels)
+                            width={128}
+                            height={128}
                             className="w-full h-32 object-cover rounded-lg border border-gray-600"
                           />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
@@ -666,7 +596,6 @@ export default function EditProductPage() {
                     </div>
                   )}
 
-                  {/* Upload Area */}
                   <div className="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center hover:border-gray-500 transition-colors relative">
                     <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                     <div className="space-y-2">
@@ -689,70 +618,6 @@ export default function EditProductPage() {
                       disabled={images.length >= 5}
                     />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Specifications */}
-            <Card variant="gradient">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="mr-2 h-6 w-6 text-purple-400" />
-                  Specifications
-                </CardTitle>
-                <CardDescription>
-                  Add technical specifications and features
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-4 items-start">
-                      <FormField
-                        label="Specification Name"
-                        error={errors.specifications?.[index]?.key}
-                        className="flex-1"
-                      >
-                        <Input
-                          {...register(`specifications.${index}.key`)}
-                          placeholder="e.g., Brand, Color, Weight"
-                          error={!!errors.specifications?.[index]?.key}
-                        />
-                      </FormField>
-                      <FormField
-                        label="Value"
-                        error={errors.specifications?.[index]?.value}
-                        className="flex-1"
-                      >
-                        <Input
-                          {...register(`specifications.${index}.value`)}
-                          placeholder="e.g., Apple, Red, 250g"
-                          error={!!errors.specifications?.[index]?.value}
-                        />
-                      </FormField>
-                      <div className="pt-8">
-                        <Button
-                          className="cursor-pointer"
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => remove(index)}
-                          disabled={fields.length === 1}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addSpecification}
-                    className="w-full cursor-pointer"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Specification
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -787,10 +652,10 @@ export default function EditProductPage() {
               <Button
                 type="submit"
                 variant="success"
-                disabled={isLoading || !isValid}
+                disabled={isUpdating || !isValid}
                 className="w-full sm:w-auto cursor-pointer"
               >
-                {isLoading ? (
+                {isUpdating ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                     Updating Product...
@@ -809,3 +674,4 @@ export default function EditProductPage() {
     </div>
   );
 }
+           

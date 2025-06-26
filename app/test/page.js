@@ -133,7 +133,7 @@ export default function ProductsPage() {
   const { data, error, isLoading } = useGetProductsQuery();
   const [deleteProduct] = useDeleteProductMutation();
 
-  const products = data?.data || [];  
+  const products = data?.data || [];
 
   // Derive categories dynamically
   const categories = ["all", ...new Set(products.map((p) => p.category))];
@@ -277,14 +277,14 @@ export default function ProductsPage() {
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 sm:mt-0">
-              {/* <Button variant="outline" className="cursor-pointer">
+              <Button variant="outline" className="cursor-pointer">
                 <Upload className="mr-2 h-4 w-4" />
                 Import
               </Button>
               <Button variant="outline" className="cursor-pointer">
                 <Download className="mr-2 h-4 w-4" />
                 Export
-              </Button> */}
+              </Button>
               <Link href="/products/add">
                 <Button variant="success" className="cursor-pointer">
                   <Plus className="mr-2 h-4 w-4" />

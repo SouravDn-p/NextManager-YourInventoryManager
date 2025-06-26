@@ -15,6 +15,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import Loading from "@/app/products/loading";
+import Image from "next/image";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -78,7 +79,7 @@ export default function Navbar() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            {session?.user?.email || (
+            {!session?.user?.email ? (
               <>
                 <Link href="/login">
                   <button className="flex items-center cursor-pointer space-x-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-300">
@@ -93,15 +94,36 @@ export default function Navbar() {
                   </button>
                 </Link>
               </>
-            )}
-            {session?.user?.email && (
-              <button
-                onClick={() => signOut()}
-                className="flex items-center space-x-2 bg-gradient-to-r from-red-800 to-red-800 text-white px-4 py-2 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <UserPlus className="h-4 w-4" />
-                <span>Logout</span>
-              </button>
+            ) : (
+              <>
+                {/* Optional: show email or user name */}
+                {/* <div className="text-gray-200 px-2">
+                  Hello, {session.user.email}
+                </div> */}
+
+                <button className="flex items-center justify-center p-1 rounded-full transition-all duration-300 hover:scale-110 relative">
+                  <Image
+                    src={
+                      session?.user?.image ||
+                      "https://i.ibb.co/Y75m1Mk9/Final-Boss.jpg" ||
+                      "/placeholder.svg"
+                    }
+                    alt="Profile"
+                    width={200}
+                    height={200}
+                    className="w-9 h-9 rounded-full border-2 border-pink-400 transition-all duration-300 hover:border-purple-400"
+                  />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-500/0 to-purple-400/0 hover:from-pink-500/20 hover:to-purple-400/20 transition-all duration-300 opacity-0 hover:opacity-100 blur-sm"></div>
+                </button>
+
+                <button
+                  onClick={() => signOut()}
+                  className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-red-800 to-red-800 text-white px-4 py-2 rounded-xl hover:from-red-700 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  <span>Logout</span>
+                </button>
+              </>
             )}
           </div>
 
@@ -109,7 +131,7 @@ export default function Navbar() {
           <div className="md:hidden">
             <button
               onClick={toggleMenu}
-              className="text-gray-300 hover:text-white focus:outline-none focus:text-white transition-colors duration-300 p-2 rounded-lg hover:bg-gray-800/50"
+              className="text-gray-300 hover:text-white focus:outline-none focus:text-white transition-colors duration-300 p-2 rounded-lg hover:bg-gray-800/50 cursor-pointer"
             >
               {isMenuOpen ? (
                 <X className="h-6 w-6" />
@@ -143,22 +165,37 @@ export default function Navbar() {
                 );
               })}
               <div className="border-t border-gray-700/50 pt-3 mt-3">
-                <Link
-                  href="/login"
-                  className="flex items-center space-x-3 px-3 py-3 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-300"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <LogIn className="h-5 w-5" />
-                  <span>Login</span>
-                </Link>
-                <Link
-                  href="/register"
-                  className="flex items-center space-x-3 px-3 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-300 mt-2 shadow-lg"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <UserPlus className="h-5 w-5" />
-                  <span>Register</span>
-                </Link>
+                {!session?.user?.email ? (
+                  <>
+                    <Link
+                      href="/login"
+                      className="flex items-center space-x-3 px-3 py-3 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-xl transition-all duration-300"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <LogIn className="h-5 w-5" />
+                      <span>Login</span>
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="flex items-center cursor-pointer space-x-3 px-3 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-300 mt-2 shadow-lg"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <UserPlus className="h-5 w-5" />
+                      <span>Register</span>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    {" "}
+                    <button
+                      onClick={() => signOut()}
+                      className="flex items-center cursor-pointer space-x-2 bg-gradient-to-r from-red-800 to-red-800 text-white px-4 py-2 rounded-xl hover:from-red-700 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      <span>Logout</span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

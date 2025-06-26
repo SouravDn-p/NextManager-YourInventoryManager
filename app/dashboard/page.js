@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
   Package,
@@ -17,9 +18,17 @@ import {
   Zap,
   Star,
   Activity,
+  Shield,
+  Settings,
+  BarChart3,
+  ShoppingCart,
+  Clock,
+  CheckCircle,
+  Edit,
 } from "lucide-react";
+import Image from "next/image";
 
-// Inline Components with Dark Theme
+// Enhanced Inline Components with Dark Theme (keep existing components)
 const Button = ({
   children,
   className = "",
@@ -38,6 +47,8 @@ const Button = ({
     ghost: "hover:bg-gray-800/50 text-gray-300 hover:text-white",
     gradient:
       "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-lg hover:shadow-xl",
+    admin:
+      "bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-700 hover:to-orange-700 shadow-lg hover:shadow-xl",
   };
 
   const sizes = {
@@ -63,6 +74,8 @@ const Card = ({ children, className = "", variant = "default", ...props }) => {
       "rounded-2xl bg-gradient-to-br from-gray-900/80 to-gray-800/80 border border-gray-700/30 text-gray-100 shadow-xl backdrop-blur-sm hover:shadow-2xl transition-all duration-300",
     glass:
       "rounded-2xl bg-gray-900/30 border border-gray-700/30 text-gray-100 shadow-xl backdrop-blur-xl hover:shadow-2xl transition-all duration-300",
+    admin:
+      "rounded-2xl bg-gradient-to-br from-red-900/20 to-orange-900/20 border border-red-500/30 text-gray-100 shadow-xl backdrop-blur-sm hover:shadow-2xl transition-all duration-300",
   };
 
   return (
@@ -106,6 +119,7 @@ const Badge = ({ children, className = "", variant = "default" }) => {
     destructive: "bg-red-500/20 text-red-300 border border-red-500/30",
     success: "bg-green-500/20 text-green-300 border border-green-500/30",
     purple: "bg-purple-500/20 text-purple-300 border border-purple-500/30",
+    admin: "bg-red-500/20 text-red-300 border border-red-500/30",
   };
 
   return (
@@ -118,51 +132,136 @@ const Badge = ({ children, className = "", variant = "default" }) => {
 };
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
   const [timeRange, setTimeRange] = useState("7d");
 
-  // Mock data with enhanced styling
-  const stats = [
-    {
-      title: "Total Products",
-      value: "1,234",
-      change: "+12%",
-      trend: "up",
-      icon: Package,
-      color: "text-blue-400",
-      bgGradient: "from-blue-500/20 to-cyan-500/20",
-      glowColor: "shadow-blue-500/20",
-    },
-    {
-      title: "Total Revenue",
-      value: "$45,231",
-      change: "+8.2%",
-      trend: "up",
-      icon: DollarSign,
-      color: "text-green-400",
-      bgGradient: "from-green-500/20 to-emerald-500/20",
-      glowColor: "shadow-green-500/20",
-    },
-    {
-      title: "Low Stock Items",
-      value: "23",
-      change: "-4%",
-      trend: "down",
-      icon: AlertTriangle,
-      color: "text-orange-400",
-      bgGradient: "from-orange-500/20 to-red-500/20",
-      glowColor: "shadow-orange-500/20",
-    },
-    {
-      title: "Active Users",
-      value: "573",
-      change: "+18%",
-      trend: "up",
-      icon: Users,
-      color: "text-purple-400",
-      bgGradient: "from-purple-500/20 to-pink-500/20",
-      glowColor: "shadow-purple-500/20",
-    },
-  ];
+  // Loading state
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-blue-400 text-lg">⏳ Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Unauthenticated state
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <Card variant="glass" className="p-8 text-center max-w-md">
+          <div className="mb-6">
+            <Shield className="h-16 w-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-2">
+              Access Denied
+            </h2>
+            <p className="text-red-400 text-lg">❌ You are not logged in.</p>
+            <p className="text-gray-400 mt-2">
+              Please sign in to access your dashboard.
+            </p>
+          </div>
+          <Link href="/login">
+            <Button variant="default" className="w-full">
+              Sign In
+            </Button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+
+  // Extract user data from session
+  const { name, email, role, image } = session.user;
+  const isAdmin = role === "admin";
+
+  // Mock data with enhanced styling - adjust based on user role
+  const stats = isAdmin
+    ? [
+        {
+          title: "Total Products",
+          value: "1,234",
+          change: "+12%",
+          trend: "up",
+          icon: Package,
+          color: "text-blue-400",
+          bgGradient: "from-blue-500/20 to-cyan-500/20",
+          glowColor: "shadow-blue-500/20",
+        },
+        {
+          title: "Total Revenue",
+          value: "$45,231",
+          change: "+8.2%",
+          trend: "up",
+          icon: DollarSign,
+          color: "text-green-400",
+          bgGradient: "from-green-500/20 to-emerald-500/20",
+          glowColor: "shadow-green-500/20",
+        },
+        {
+          title: "Active Users",
+          value: "573",
+          change: "+18%",
+          trend: "up",
+          icon: Users,
+          color: "text-purple-400",
+          bgGradient: "from-purple-500/20 to-pink-500/20",
+          glowColor: "shadow-purple-500/20",
+        },
+        {
+          title: "Low Stock Items",
+          value: "23",
+          change: "-4%",
+          trend: "down",
+          icon: AlertTriangle,
+          color: "text-orange-400",
+          bgGradient: "from-orange-500/20 to-red-500/20",
+          glowColor: "shadow-orange-500/20",
+        },
+      ]
+    : [
+        {
+          title: "My Products",
+          value: "45",
+          change: "+3%",
+          trend: "up",
+          icon: Package,
+          color: "text-blue-400",
+          bgGradient: "from-blue-500/20 to-cyan-500/20",
+          glowColor: "shadow-blue-500/20",
+        },
+        {
+          title: "Orders Processed",
+          value: "128",
+          change: "+12%",
+          trend: "up",
+          icon: ShoppingCart,
+          color: "text-green-400",
+          bgGradient: "from-green-500/20 to-emerald-500/20",
+          glowColor: "shadow-green-500/20",
+        },
+        {
+          title: "Tasks Completed",
+          value: "89%",
+          change: "+5%",
+          trend: "up",
+          icon: CheckCircle,
+          color: "text-purple-400",
+          bgGradient: "from-purple-500/20 to-pink-500/20",
+          glowColor: "shadow-purple-500/20",
+        },
+        {
+          title: "Efficiency Score",
+          value: "94.5%",
+          change: "+2%",
+          trend: "up",
+          icon: TrendingUp,
+          color: "text-orange-400",
+          bgGradient: "from-orange-500/20 to-red-500/20",
+          glowColor: "shadow-orange-500/20",
+        },
+      ];
 
   const recentProducts = [
     {
@@ -207,40 +306,75 @@ export default function DashboardPage() {
     },
   ];
 
-  const recentActivity = [
-    {
-      id: 1,
-      action: "Product Added",
-      item: "Bluetooth Speaker",
-      user: "John Doe",
-      time: "10 minutes ago",
-      type: "add",
-    },
-    {
-      id: 2,
-      action: "Stock Updated",
-      item: "Wireless Mouse",
-      user: "Jane Smith",
-      time: "1 hour ago",
-      type: "update",
-    },
-    {
-      id: 3,
-      action: "Product Deleted",
-      item: "Old Keyboard",
-      user: "Mike Johnson",
-      time: "3 hours ago",
-      type: "delete",
-    },
-    {
-      id: 4,
-      action: "Low Stock Alert",
-      item: "Phone Charger",
-      user: "System",
-      time: "5 hours ago",
-      type: "alert",
-    },
-  ];
+  const recentActivity = isAdmin
+    ? [
+        {
+          id: 1,
+          action: "New user registered",
+          item: "john.doe@example.com",
+          user: "System",
+          time: "10 minutes ago",
+          type: "user",
+        },
+        {
+          id: 2,
+          action: "Product inventory updated",
+          item: "Wireless Mouse",
+          user: "Jane Smith",
+          time: "1 hour ago",
+          type: "update",
+        },
+        {
+          id: 3,
+          action: "System backup completed",
+          item: "Daily Backup",
+          user: "System",
+          time: "3 hours ago",
+          type: "system",
+        },
+        {
+          id: 4,
+          action: "Low stock alert triggered",
+          item: "Phone Charger",
+          user: "System",
+          time: "5 hours ago",
+          type: "alert",
+        },
+      ]
+    : [
+        {
+          id: 1,
+          action: "Product Added",
+          item: "Bluetooth Speaker",
+          user: name || "You",
+          time: "10 minutes ago",
+          type: "add",
+        },
+        {
+          id: 2,
+          action: "Stock Updated",
+          item: "Wireless Mouse",
+          user: name || "You",
+          time: "1 hour ago",
+          type: "update",
+        },
+        {
+          id: 3,
+          action: "Order Processed",
+          item: "Order #12345",
+          user: name || "You",
+          time: "3 hours ago",
+          type: "order",
+        },
+        {
+          id: 4,
+          action: "Profile Updated",
+          item: "Contact Information",
+          user: name || "You",
+          time: "1 day ago",
+          type: "profile",
+        },
+      ];
 
   const topCategories = [
     { name: "Electronics", count: 456, percentage: 37, color: "bg-blue-500" },
@@ -268,9 +402,15 @@ export default function DashboardPage() {
       case "add":
         return <Plus className="h-4 w-4 text-green-400" />;
       case "update":
-        return <TrendingUp className="h-4 w-4 text-blue-400" />;
-      case "delete":
-        return <AlertTriangle className="h-4 w-4 text-red-400" />;
+        return <Edit className="h-4 w-4 text-blue-400" />;
+      case "order":
+        return <ShoppingCart className="h-4 w-4 text-purple-400" />;
+      case "profile":
+        return <Users className="h-4 w-4 text-orange-400" />;
+      case "user":
+        return <Users className="h-4 w-4 text-green-400" />;
+      case "system":
+        return <Settings className="h-4 w-4 text-blue-400" />;
       case "alert":
         return <AlertTriangle className="h-4 w-4 text-orange-400" />;
       default:
@@ -282,14 +422,37 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          {/* Header */}
+          {/* Header with User Info */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Dashboard
-              </h1>
-              <p className="mt-2 text-gray-400">
-                Welcome back! Here&aposs your inventory overview.
+              <div className="flex items-center space-x-4 mb-2">
+                <Image
+                  src={image || "/placeholder.svg?height=60&width=60"}
+                  alt="User avatar"
+                  width={500}
+                  height={500}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-gray-600"
+                />
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    Welcome back, {name || "User"}!
+                  </h1>
+                  <div className="flex items-center space-x-3 mt-1">
+                    <p className="text-gray-400">{email}</p>
+                    <Badge
+                      variant={isAdmin ? "admin" : "default"}
+                      className="text-xs"
+                    >
+                      <Shield className="mr-1 h-3 w-3" />
+                      {role?.toUpperCase() || "USER"}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+              <p className="text-gray-400">
+                {isAdmin
+                  ? "Admin Dashboard - Manage your entire inventory system"
+                  : "Your personal inventory dashboard"}
               </p>
             </div>
             <div className="flex items-center space-x-4 mt-4 sm:mt-0">
@@ -305,12 +468,21 @@ export default function DashboardPage() {
                   <option value="90d">Last 90 days</option>
                 </select>
               </div>
-              <Link href="/products">
-                <Button variant="gradient">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Product
-                </Button>
-              </Link>
+              {isAdmin ? (
+                <Link href="/products">
+                  <Button variant="admin">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Product
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/products">
+                  <Button variant="gradient">
+                    <Eye className="mr-2 h-4 w-4" />
+                    View Products
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
 
@@ -372,10 +544,12 @@ export default function DashboardPage() {
                     <div>
                       <CardTitle className="flex items-center">
                         <Activity className="mr-2 h-5 w-5 text-blue-400" />
-                        Recent Products
+                        {isAdmin ? "Recent Products" : "Your Recent Products"}
                       </CardTitle>
                       <CardDescription>
-                        Latest updates to your inventory
+                        {isAdmin
+                          ? "Latest updates to the inventory"
+                          : "Products you've recently worked with"}
                       </CardDescription>
                     </div>
                     <Link href="/products">
@@ -430,39 +604,87 @@ export default function DashboardPage() {
               </Card>
             </div>
 
-            {/* Top Categories */}
+            {/* Top Categories or User Tools */}
             <div>
-              <Card variant="glass">
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Star className="mr-2 h-5 w-5 text-yellow-400" />
-                    Top Categories
-                  </CardTitle>
-                  <CardDescription>Products by category</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {topCategories.map((category, index) => (
-                      <div key={index} className="group">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-200">
-                            {category.name}
-                          </span>
-                          <span className="text-sm text-gray-400">
-                            {category.count}
-                          </span>
+              {isAdmin ? (
+                <Card variant="glass">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Star className="mr-2 h-5 w-5 text-yellow-400" />
+                      Top Categories
+                    </CardTitle>
+                    <CardDescription>Products by category</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {topCategories.map((category, index) => (
+                        <div key={index} className="group">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-200">
+                              {category.name}
+                            </span>
+                            <span className="text-sm text-gray-400">
+                              {category.count}
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-700/50 rounded-full h-3 overflow-hidden">
+                            <div
+                              className={`${category.color} h-3 rounded-full transition-all duration-1000 ease-out group-hover:shadow-lg`}
+                              style={{ width: `${category.percentage}%` }}
+                            ></div>
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-700/50 rounded-full h-3 overflow-hidden">
-                          <div
-                            className={`${category.color} h-3 rounded-full transition-all duration-1000 ease-out group-hover:shadow-lg`}
-                            style={{ width: `${category.percentage}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card variant="glass">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Settings className="mr-2 h-5 w-5 text-blue-400" />
+                      Quick Actions
+                    </CardTitle>
+                    <CardDescription>Your most used tools</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <Link href="/products" className="block">
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                        >
+                          <Package className="mr-2 h-4 w-4" />
+                          View Products
+                        </Button>
+                      </Link>
+                      <Link href="/profile" className="block">
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Update Profile
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                      >
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        View Reports
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
 
@@ -473,10 +695,12 @@ export default function DashboardPage() {
                 <div>
                   <CardTitle className="flex items-center">
                     <Zap className="mr-2 h-5 w-5 text-yellow-400" />
-                    Recent Activity
+                    {isAdmin ? "System Activity" : "Your Recent Activity"}
                   </CardTitle>
                   <CardDescription>
-                    Latest actions in your inventory system
+                    {isAdmin
+                      ? "Latest system events and user actions"
+                      : "Your recent actions and updates"}
                   </CardDescription>
                 </div>
                 <Button variant="outline" size="sm">
@@ -505,9 +729,10 @@ export default function DashboardPage() {
                             {activity.item} by {activity.user}
                           </p>
                         </div>
-                        <span className="text-sm text-gray-500">
+                        <div className="flex items-center text-sm text-gray-500">
+                          <Clock className="h-3 w-3 mr-1" />
                           {activity.time}
-                        </span>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -22,7 +22,8 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import Image from "next/image";
 import Swal from "sweetalert2";
-
+import { useRouter } from "next/navigation";
+import { useCreateProductMutation } from "@/redux/api/productapi";
 
 // Validation Schema
 const productSchema = z.object({
@@ -210,8 +211,11 @@ const FormField = ({ label, required, error, children }) => (
 );
 
 export default function AddProductPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
+  const [createProduct, { isLoading }] = useCreateProductMutation();
+  const [errorMsg, setErrorMsg] = useState("");
+  const router = useRouter();
 
   const {
     register,
@@ -256,7 +260,7 @@ export default function AddProductPage() {
   ];
 
   const onSubmit = async (data) => {
-    setIsLoading(true);
+    setLoading(true);
 
     try {
       // Filter out empty specifications
@@ -272,32 +276,21 @@ export default function AddProductPage() {
       };
 
       // ✅ Real API call
-      const response = await fetch("http://localhost:3000/api/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(productData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to create product");
-      }
+      await createProduct(productData).unwrap();
 
       // ✅ Success Alert
       Swal.fire({
         icon: "success",
         title: "Product Added!",
         text: "✅ Your product has been created successfully.",
-        confirmButtonColor: "#10B981", // tailwind green-500
+        confirmButtonColor: "#10B981",
       });
 
       reset();
       setImages([]);
+      router.push("/products");
     } catch (error) {
-      console.error("❌ Error creating product:", error);
+      console.error("❌ Error creating product:", err?.data?.message);
 
       // ❌ Error Alert
       Swal.fire({
@@ -307,10 +300,9 @@ export default function AddProductPage() {
         confirmButtonColor: "#EF4444", // tailwind red-500
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-  
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
