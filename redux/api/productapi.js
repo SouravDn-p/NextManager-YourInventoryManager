@@ -43,6 +43,14 @@ export const productApi = createApi({
       }),
       invalidatesTags: ["Product"],
     }),
+    // --- Auth Endpoints ---
+    registerUser: builder.mutation({
+      query: (userData) => ({
+        url: "auth/register",
+        method: "POST",
+        body: userData,
+      }),
+    }),
   }),
 });
 
@@ -52,4 +60,5 @@ export const {
   useCreateProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
+  useRegisterUserMutation,
 } = productApi;

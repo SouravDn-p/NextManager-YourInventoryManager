@@ -12,6 +12,10 @@ import {
   Github,
   Check,
 } from "lucide-react";
+// import { useRouter } from "next/router";
+import { useRegisterUserMutation } from "@/redux/api/productapi";
+import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 // Enhanced Inline Components with Dark Theme
 const Button = ({
@@ -140,6 +144,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const [registerUser] = useRegisterUserMutation();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -158,17 +164,44 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!");
+
+    const { firstName, lastName, email, password, confirmPassword } = formData;
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match.");
       return;
     }
+
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Registration attempt:", formData);
+    try {
+      const fullName = `${firstName} ${lastName}`.trim();
+
+      const res = await registerUser({
+        name: fullName,
+        email,
+        password,
+      }).unwrap();
+
+      Swal.fire({
+        title: "Success!",
+        text: "Registration successful!",
+        icon: "success",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      router.push("/login");
+    } catch (err) {
+      Swal.fire({
+        title: "Error!",
+        text: err?.data?.error || "Registration failed.",
+        icon: "error",
+        showConfirmButton: false,
+        timer: 3000,
+      });
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   const handleChange = (e) => {

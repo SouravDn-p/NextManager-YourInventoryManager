@@ -1,4 +1,3 @@
-// app/api/auth/login/route.js
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -19,6 +18,7 @@ export async function POST(req) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
+  // 🔐 Create token
   const token = jwt.sign(
     {
       id: user._id,
@@ -30,5 +30,14 @@ export async function POST(req) {
     { expiresIn: "7d" }
   );
 
-  return NextResponse.json({ token });
+  // ✅ Return token + user
+  return NextResponse.json({
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  });
 }

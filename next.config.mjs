@@ -6,6 +6,7 @@ const nextConfig = {
       "www.gadstyle.com",
       "www.startech.com.bd",
       "adminapi.applegadgetsbd.com",
+      "i.ibb.co",
     ],
   },
 };
