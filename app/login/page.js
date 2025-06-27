@@ -2,11 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Package, Eye, EyeOff, Mail, Lock, Github } from "lucide-react";
+import { Package, Eye, EyeOff, Mail, Lock, Github, Shield } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import Head from "next/head";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useLoginUserMutation } from "@/redux/api/productapi";
+import {
+  loginFailure,
+  loginStart,
+  loginSuccess,
+} from "@/redux/slice/authSlice";
 
 // Enhanced Inline Components with Dark Theme
 const Button = ({
@@ -134,6 +141,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { data: session } = useSession();
+
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -144,8 +154,11 @@ export default function LoginPage() {
   if (session) {
     return (
       <>
-        <div className="min-h-screen flex items-center justify-center bg-black p-4">
-          <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center ">
+          <Card
+            variant="glass"
+            className=" rounded-2xl shadow-lg p-8 max-w-md w-full text-center"
+          >
             <Image
               src={session?.user?.image || "/default-avatar.png"}
               alt="Profile"
@@ -153,37 +166,38 @@ export default function LoginPage() {
               height={96}
               className="mx-auto rounded-full shadow mb-4"
             />
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">
-              Welcome, {session?.user?.name}!
-            </h1>
-            <p className="text-gray-600">{session?.user?.email}</p>
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-white mb-2">
+                Welcome, {session?.user?.name}!
+              </h1>
 
-            <div className="mt-6">
-              <Link href={"http://localhost:3000"}>
-                <button className="bg-blue-500 cursor-pointer hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-xl shadow transition duration-300">
-                  Go to Home Page
-                </button>
-              </Link>
+              <p className="text-gray-400">{session?.user?.email}</p>
             </div>
-          </div>
+            <Link href="/">
+              <Button variant="default" className="w-full cursor-pointer">
+                Go to Home Page
+              </Button>
+            </Link>
+          </Card>
         </div>
       </>
     );
   }
 
   const onSubmit = async (data) => {
-    console.log("data", data);
-    // try {
-    //   const res = await createUserWithEmailAndPassword(
-    //     data.email,
-    //     data.password
-    //   );
-    //   if (res) {
-    //     router.push("/");
-    //   }
-    // } catch (err) {
-    //   console.error("Signup error:", err.message);
-    // }
+    try {
+      // Call API via RTK Query
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: data.email,
+        password: data.password,
+      });
+
+      // Redirect to home or dashboard
+      router.push("/dashboard");
+    } catch (err) {
+      alert(err?.data?.error || "Login failed");
+    }
   };
 
   const handleGitHubSignIn = () => {
@@ -218,7 +232,7 @@ export default function LoginPage() {
             Sign in to your InventoryPro account
           </p>
           <p className="mt-2 text-sm text-gray-500">
-            Don&apost have an account?{" "}
+            Don&apost; have an account?{" "}
             <Link
               href="/register"
               className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
