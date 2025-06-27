@@ -16,7 +16,10 @@
 # next.js
 /.next/
 /out/
+<<<<<<< HEAD
 .next/
+=======
+>>>>>>> e00a5cf41ad7b419b6ab13e8e8d8689d3001ba71
 
 # production
 /build
@@ -32,8 +35,9 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
-.env.local
+<<<<<<< HEAD
+=======
+>>>>>>> e00a5cf41ad7b419b6ab13e8e8d8689d3001ba71
 
 # vercel
 .vercel
@@ -41,5 +45,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+<<<<<<< HEAD
 
 .vercel
+=======
+>>>>>>> e00a5cf41ad7b419b6ab13e8e8d8689d3001ba71
+config.bat
+temp_auto_push.bat
+temp_interactive_push.bat
